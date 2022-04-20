@@ -3,14 +3,16 @@ from Graph import Graph, F
 from uai_loader import load
 import sys
 from LL_dif import dif_sum
+import time
+import os
 
 # data = np.loadtxt("data/dataset1/train-f-1.txt", skiprows=1, dtype='int')
-data = np.loadtxt("sample_dataset.txt", skiprows=1, dtype='int')
+# data = np.loadtxt("sample_dataset.txt", skiprows=1, dtype='int')
 # print(data)
 #print(data.shape)
 # print(data[0])
 
-def get_cpt(factor, data):
+def get_cpt_mle(factor, data):
     """
 
     :param factor: a CPT
@@ -55,15 +57,78 @@ def get_cpt(factor, data):
 
     # print(CPT)
 
-print("-------------")
+#print("-------------")
 
-rvs, fs = load('sample_bayes.uai')
-true_rvs, true_fs = load('sample_bayes.uai')
-# rvs, fs = load('data/dataset1/1.uai')
-#print(fs)
-# Learning the parameters
-for i,f in fs.items():
-    get_cpt(f, data)
+
+#
+# rvs, fs = load('sample_bayes.uai')
+# true_rvs, true_fs = load('sample_bayes.uai')
+# # rvs, fs = load('data/dataset1/1.uai')
+# #print(fs)
+# # Learning the parameters
+# for i,f in fs.items():
+#     get_cpt_mle(f, data)
+
+
+def train_mle(uai_file, train_data):
+    print(f"start training with {os.path.basename(train_data)} and BayesNet {os.path.basename(uai_file)}")
+    start_time = time.time()
+    data = np.loadtxt(train_data, skiprows=1, dtype='int')
+    rvs, fs = load(uai_file)
+    for i, f in fs.items():
+        get_cpt_mle(f, data)
+
+    average_time = (time.time() - start_time)
+    average_time = str(round(average_time, 3))
+    print(f"The training time is: {average_time} s")
+
+    return rvs, fs
+
+def get_original_model(uai_file):
+    print(f"Loading the original network: {os.path.basename(uai_file)}")
+    true_rvs, true_fs = load(uai_file)
+    print("Finish loading.")
+    return true_rvs, true_fs
+
+def learn_mle(uai_file, train_data, test_data):
+    print("-------------MLE-------------------")
+    rvs, fs = train_mle(uai_file, train_data)
+    true_rvs, true_fs = get_original_model(uai_file)
+    print("Evaluating the log likelihood difference...")
+    start_time = time.time()
+    dif = dif_sum(test_data, fs, true_fs)
+    average_time = (time.time() - start_time)
+    average_time = str(round(average_time, 3))
+    print(f"The evaluating time is: {average_time} s.")
+    print("------------------------")
+    return dif
+
+
+#dif = learn_mle('sample_bayes.uai', "sample_dataset.txt", "sample_test.txt")
+# dif = learn_mle('data/dataset1/1.uai', "data/dataset1/train-f-1.txt", "data/dataset1/test.txt")
+
+mle_result = "mle_result.txt"
+
+uai_files = ['data/dataset1/1.uai', 'data/dataset2/2.uai', 'data/dataset3/3.uai']
+mle_train_files = ["train-f-1.txt", "train-f-2.txt", "train-f-3.txt", "train-f-4.txt"]
+
+def train_dataset(uai_file, train_dir, test_data, result_file):
+    for train_file in mle_train_files:
+        train_data = train_dir + "/" + train_file
+
+        dif = learn_mle(uai_file, train_data, test_data)
+        with open(result_file, 'a') as f:
+            dif = str(round(dif, 4))
+            f.write(os.path.basename(uai_file) + "\t" + train_file + "\t")
+            f.write("LLDiff = " + dif + "\n")
+
+
+train_dataset('data/dataset1/1.uai', 'data/dataset1', 'data/dataset1/test.txt', mle_result)
+
+# with open(mle_result, "a") as f:
+#     dif = learn_mle('sample_bayes.uai', "sample_dataset.txt", "sample_test.txt")
+#     dif = str(round(dif, 4))
+#     f.write("LLDiff = " + dif + "\n")
 
 
 # # Original paremeters
@@ -71,7 +136,7 @@ for i,f in fs.items():
 #     print(f.table)
 # for i in range(5):
 #     get_cpt(fs[i], data)
-print("****************")
+# print("****************")
 # def get_probs_from_CPTs(sample, fs):
 #     probs = []
 #
@@ -136,9 +201,6 @@ print("****************")
 #     print("log likelihood difference = : ", total)
 #     return total
 
-dif_sum("sample_test.txt", fs, true_fs)
+# dif_sum("sample_test.txt", fs, true_fs)
 
 
-def main():
-    uai_file = sys.argv[1]
-    """to be completed for task 1"""

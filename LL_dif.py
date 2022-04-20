@@ -16,7 +16,7 @@ def get_probs_from_CPTs(sample, fs):
         prob = cpt[values]
         # avoid the probability of 0 or small value
         if prob == 0 or prob < 1e-6:
-            prob = 1e-6
+            prob = 1e-5
 
         probs.append(prob)
 
@@ -58,7 +58,7 @@ def dif_sum(test_file, fs, true_fs):
     total = 0
     for i in range(samples.shape[0]):
         dif_sample = diff_per_sample(samples[i], fs, true_fs)
-        print(f"{i}th dif: {dif_sample}")
+        # print(f"{i}th dif: {dif_sample}")
         total += dif_sample
 
     print("log likelihood difference = : ", total)
