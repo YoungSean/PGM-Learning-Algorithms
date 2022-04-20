@@ -2,8 +2,8 @@ import numpy as np
 from Graph import Graph, F
 from uai_loader import load
 
-data = np.loadtxt("data/dataset1/train-f-1.txt", skiprows=1, dtype='int')
-#data = np.loadtxt("sample_dataset.txt", skiprows=1, dtype='int')
+# data = np.loadtxt("data/dataset1/train-f-1.txt", skiprows=1, dtype='int')
+data = np.loadtxt("sample_dataset.txt", skiprows=1, dtype='int')
 # print(data)
 print(data.shape)
 print(data[0])
@@ -36,9 +36,9 @@ def get_cpt(factor, data):
                 condition_Y = condition_Y & (data[:, rv.name] == value)
                 count_Y = np.sum(condition_Y)
 
-        if count_Y == 0:
-            CPT[index] = 0
-            continue
+        # if count_Y == 0:
+        #     CPT[index] = 0
+        #     continue
 
         condition = True
         for i in range(num_rvs):
@@ -49,18 +49,47 @@ def get_cpt(factor, data):
         count_XY = np.sum(condition)
         #print("count XY: ", count_XY)
         #print("count_Y: ", count_Y)
-        CPT[index] = count_XY / count_Y
+        CPT[index] = (count_XY + 1) / (count_Y + 2)
 
     print(CPT)
 
 print("-------------")
 
-# rvs, fs = load('sample_bayes.uai')
-rvs, fs = load('data/dataset1/1.uai')
+rvs, fs = load('sample_bayes.uai')
+# rvs, fs = load('data/dataset1/1.uai')
 print(fs)
 
-# for i,f in fs.items():
-#     get_cpt(f, data)
-for i in range(5):
-    get_cpt(fs[i], data)
+for i,f in fs.items():
+    get_cpt(f, data)
+# for i in range(5):
+#     get_cpt(fs[i], data)
 
+def get_probs_from_CPTs(sample, fs):
+    probs = []
+
+    for i, f in fs.items():
+        cpt = f.table
+        rvs = f.nb
+        values = []
+        # get the index (variable assigment) of CPT
+        for rv in rvs:
+            value = sample[rv.name]
+            values.append(value)
+
+        values = tuple(values)
+        prob = cpt[values]
+        probs.append(prob)
+
+    print("probs for this assignment: ", probs)
+    return probs
+
+
+def log_likelihood(probs):
+    result = 0
+    for p in probs:
+        result += np.log(p)
+    return result
+
+probs = get_probs_from_CPTs([1,1,1], fs)
+result = log_likelihood(probs)
+print("log likelihood: ", result)
