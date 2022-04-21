@@ -124,6 +124,8 @@ def train_dataset(uai_file, train_dir, test_data, result_file):
 
 
 train_dataset('data/dataset1/1.uai', 'data/dataset1', 'data/dataset1/test.txt', mle_result)
+train_dataset('data/dataset2/2.uai', 'data/dataset2', 'data/dataset2/test.txt', mle_result)
+train_dataset('data/dataset3/3.uai', 'data/dataset3', 'data/dataset3/test.txt', mle_result)
 
 # with open(mle_result, "a") as f:
 #     dif = learn_mle('sample_bayes.uai', "sample_dataset.txt", "sample_test.txt")
