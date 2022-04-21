@@ -85,9 +85,9 @@ def train_mle(uai_file, train_data):
     return rvs, fs
 
 def get_original_model(uai_file):
-    print(f"Loading the original network: {os.path.basename(uai_file)}")
+    #print(f"Loading the original network: {os.path.basename(uai_file)}")
     true_rvs, true_fs = load(uai_file)
-    print("Finish loading.")
+    #print("Finish loading.")
     return true_rvs, true_fs
 
 def learn_mle(uai_file, train_data, test_data):
@@ -122,11 +122,13 @@ def train_dataset(uai_file, train_dir, test_data, result_file):
             f.write(os.path.basename(uai_file) + "\t" + train_file + "\t")
             f.write("LLDiff = " + dif + "\n")
 
+def main():
+    train_dataset('data/dataset1/1.uai', 'data/dataset1', 'data/dataset1/test.txt', mle_result)
+    train_dataset('data/dataset2/2.uai', 'data/dataset2', 'data/dataset2/test.txt', mle_result)
+    train_dataset('data/dataset3/3.uai', 'data/dataset3', 'data/dataset3/test.txt', mle_result)
 
-train_dataset('data/dataset1/1.uai', 'data/dataset1', 'data/dataset1/test.txt', mle_result)
-train_dataset('data/dataset2/2.uai', 'data/dataset2', 'data/dataset2/test.txt', mle_result)
-train_dataset('data/dataset3/3.uai', 'data/dataset3', 'data/dataset3/test.txt', mle_result)
-
+if __name__ == '__main__':
+    main()
 # with open(mle_result, "a") as f:
 #     dif = learn_mle('sample_bayes.uai', "sample_dataset.txt", "sample_test.txt")
 #     dif = str(round(dif, 4))

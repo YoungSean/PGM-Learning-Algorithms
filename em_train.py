@@ -1,6 +1,8 @@
 import numpy as np
 from collections import deque
 from uai_loader import load
+from LL_dif import log_likelihood_per_sample, dif_sum
+from train import get_original_model
 
 # get n numbers from 0 to 1. They sum to 1.
 # used for parameter initialization
@@ -8,11 +10,6 @@ def get_prob(n):
     x = np.random.randint(10, size=n)
     # softmax
     return np.exp(x)/sum(np.exp(x))
-
-
-# probs = get_N_prob(2)
-# print(probs)
-# print(type(probs))
 
 def line_to_cases(line):
     root = line.split()
@@ -67,7 +64,7 @@ def get_initial_cases(train_file):
     return cases, probs
 
 # cases, probs = get_initial_cases('data/dataset1/train-p-1.txt')
-cases, probs = get_initial_cases('sample_p.txt')
+
 
 def get_cpt_M_step(factor, data, probs):
     """
@@ -108,15 +105,57 @@ def get_cpt_M_step(factor, data, probs):
 
         weights_XY = condition * probs
         count_XY = np.sum(weights_XY)
-        print("count XY: ", count_XY)
-        print("count_Y: ", count_Y)
+        #print("count XY: ", count_XY)
+        #print("count_Y: ", count_Y)
         # use small number to smooth
         CPT[index] = (count_XY + 1e-5) / (count_Y + 2e-5)
 
-rvs, fs = load('sample_bayes.uai')
+# rvs, fs = load('sample_bayes.uai')
+# cases, probs = get_initial_cases('sample_p.txt')
+# update CPTs
+def M_step(fs, cases, probs):
+    for i, f in fs.items():
+        get_cpt_M_step(f, cases, probs)
 
-for i,f in fs.items():
-    get_cpt_M_step(f, cases, probs)
+# M_step(fs, cases, probs)
+# for i, f in fs.items():
+#     print(f.table)
 
-for i, f in fs.items():
-    print(f.table)
+## update likelihood of cases
+def E_step(fs, cases, probs):
+    for i, case in enumerate(cases):
+        loglike_case = log_likelihood_per_sample(case, fs)
+        likelihood = np.exp(loglike_case)
+        probs[i] = likelihood
+
+    return probs
+# print("Before updating: ", probs[5])
+# probs = E_step(fs, cases, probs)
+# print("After updating: ", probs[5])
+#
+# print("**********")
+# M_step(fs, cases, probs)
+# print("updating parameters")
+#
+# for i, f in fs.items():
+#     print(f.table)
+
+def EM(uai_file, train_data):
+    rvs, fs = load(uai_file)
+    cases, probs = get_initial_cases(train_data)
+    # initialize the parameter
+    M_step(fs, cases, probs)
+    for i, f in fs.items():
+        print(f.table)
+    for i in range(20):
+        probs = E_step(fs, cases, probs)
+        M_step(fs, cases, probs)
+    print("result: ")
+    for i, f in fs.items():
+        print(f.table)
+    return fs
+
+true_rvs, true_fs = get_original_model('sample_bayes.uai')
+fs = EM('sample_bayes.uai', 'sample_p.txt')
+dif_sum('sample_test.txt', fs, true_fs)
+
